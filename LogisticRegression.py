@@ -1,6 +1,12 @@
 import time
 import pandas as pd
 import numpy as np
+from sklearn.metrics import accuracy_score
+import warnings
+warnings.filterwarnings('ignore')
+
+# logistic function
+logistic = lambda z: 1./ (1 + np.exp(-z))
 
 class TrainingResults:
         
