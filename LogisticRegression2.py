@@ -5,7 +5,6 @@ from sklearn.metrics import accuracy_score
 import warnings
 warnings.filterwarnings('ignore')
 import pdb
-import random
 
 # logistic function
 logistic = lambda z: 1./ (1 + np.exp(-z))
@@ -107,6 +106,7 @@ class LogisticRegression:
         return acc_list
 
     def fit_for_vis_complex(self, x, y, val_X, val_y, itv=1e3, batch_size=-1, max_epochs=-1, momentum=0):
+        pdb.set_trace()
         if batch_size  == -1:
             batch_size = len(x)
         start_time = time.process_time()
@@ -154,6 +154,7 @@ class LogisticRegression:
                 time_itv += 1
             if batch_size < len(reduced_x):
                 rand_index = np.random.choice(len(reduced_x), batch_size, replace=False)
+                pdb.set_trace()
                 batch_x = reduced_x[rand_index]
                 batch_y = reduced_y.iloc[rand_index]
                 reduced_x = np.delete(reduced_x, rand_index, axis=0)
@@ -167,100 +168,6 @@ class LogisticRegression:
                 acc_list_epoch.append(accuracy_score(val_y, val_yh))
                 grad_list_epoch.append(np.linalg.norm(g))
                 num_epochs += 1
-            change = momentum * change + (1 - momentum) * g
-            self.w = self.w - self.learning_rate * change
-            t += 1
-            elapsed_time = time.process_time() - start_time
-        if self.verbose:
-            print(f'learning rate: {self.learning_rate}')
-            print(f'batch size: {batch_size}')
-            print(f'terminated after {t} iterations, with norm of the gradient equal to {np.linalg.norm(g)}')
-            print(f'the weight found: {self.w}')
-            print(f'time elapsed: {elapsed_time: .2f} seconds')
-            print()
-            
-        result = TrainingResults(self, batch_size, acc_list_it, acc_list_time, acc_list_epoch, grad_list_it, grad_list_time, grad_list_epoch, np.linalg.norm(g), t, elapsed_time)
-
-        return result
-    
-    def fit_for_vis_complex2(self, x, y, val_X, val_y, itv=1e3, batch_size=-1, max_epochs=-1, momentum=0):
-        if batch_size  == -1:
-            batch_size = len(x)
-        start_time = time.process_time()
-        if x.ndim == 1:
-            x = x[:, None]
-        if self.add_bias:
-            N = x.shape[0]
-            x = np.column_stack([x,np.ones(N)])
-        N,D = x.shape
-        print(x.shape)
-        self.w = np.zeros(D)
-        g = np.inf 
-        t = 0
-
-        acc_list_it = []
-        acc_list_time = []
-        grad_list_it = []
-        grad_list_time = []
-        acc_list_epoch = []
-        grad_list_epoch = []
-        time_itv = 0
-        elapsed_time = 0
-        reduced_x = x
-        reduced_y = y
-        epoch_done = False
-        num_epochs = 0
-        change = 0
-        if max_epochs != -1:
-            by_iters = False
-            by_epochs = True
-        else:
-            by_iters = True
-            by_epochs = False
-        
-        index_list = list(range(len(y)))
-        random.shuffle(index_list)
-        start = 0
-        end = batch_size
-
-        # the code snippet below is for gradient descent
-        while np.linalg.norm(g) > self.epsilon and (by_epochs or t < self.max_iters) and (by_iters or num_epochs < max_epochs) :
-            if t % itv == 0 and by_iters:
-                val_yh = (self.predict(val_X) > 0.5).astype('int')
-                acc_list_it.append(accuracy_score(val_y, val_yh))
-                grad_list_it.append(np.linalg.norm(g))
-            if elapsed_time > 15.0 * time_itv:
-                val_yh = (self.predict(val_X) > 0.5).astype('int')
-                acc_list_time.append(accuracy_score(val_y, val_yh))
-                grad_list_time.append(np.linalg.norm(g))
-                time_itv += 1
-            if end < len(y) and by_epochs:
-                rand_index = index_list[start:end]
-                batch_x = x[rand_index]
-                batch_y = y.iloc[rand_index]
-                g = self.gradient(batch_x, batch_y)
-                start += batch_size
-                end += batch_size
-            elif by_epochs:
-                rand_index = index_list[start:] # the rest of the indices
-                batch_x = x[rand_index]
-                batch_y = y.iloc[rand_index]
-                g = self.gradient(batch_x, batch_y)
-                num_epochs += 1
-
-                # reset index_list
-                start = 0
-                end = batch_size
-                random.shuffle(index_list)
-                if num_epochs % itv == 0:
-                    val_yh = (self.predict(val_X) > 0.5).astype('int')
-                    acc_list_epoch.append(accuracy_score(val_y, val_yh))
-                    grad_list_epoch.append(np.linalg.norm(g))
-                if num_epochs % 1000 == 0:
-                    print(f'{num_epochs}/{max_epochs} complete.')
-            else:
-                g = self.gradient(x, y)
-
             change = momentum * change + (1 - momentum) * g
             self.w = self.w - self.learning_rate * change
             t += 1
