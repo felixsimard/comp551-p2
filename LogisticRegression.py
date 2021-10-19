@@ -183,7 +183,7 @@ class LogisticRegression:
 
         return result
     
-    def fit_for_vis_complex2(self, x, y, val_X, val_y, itv=1e3, batch_size=-1, max_epochs=-1, momentum=0):
+    def fit_for_vis_complex2(self, x, y, val_X, val_y, itv=1e3, batch_size=-1, max_epochs=-1, momentum=0, smoothing=False):
         if batch_size  == -1:
             batch_size = len(x)
         start_time = time.process_time()
@@ -222,7 +222,10 @@ class LogisticRegression:
         random.shuffle(index_list)
         start = 0
         end = batch_size
-
+        
+        acc_window = []
+        grad_window = []
+        
         # the code snippet below is for gradient descent
         while np.linalg.norm(g) > self.epsilon and (by_epochs or t < self.max_iters) and (by_iters or num_epochs < max_epochs) :
             if t % itv == 0 and by_iters:
@@ -252,12 +255,26 @@ class LogisticRegression:
                 start = 0
                 end = batch_size
                 random.shuffle(index_list)
-                if num_epochs % itv == 0:
+                
+                if smoothing: # if smoothing is required
                     val_yh = (self.predict(val_X) > 0.5).astype('int')
-                    acc_list_epoch.append(accuracy_score(val_y, val_yh))
-                    grad_list_epoch.append(np.linalg.norm(g))
+                    acc_window.append(accuracy_score(val_y, val_yh))
+                    grad_window.append(np.linalg.norm(g))
+                
+                if num_epochs % itv == 0:
+                    if smoothing:
+                        acc_score = sum(acc_window)/len(acc_window)
+                        acc_window = []
+                        grad_score = sum(grad_window)/len(grad_window)
+                    else:
+                        acc_score = accuracy_score(val_y, val_yh)
+                        grad_score = np.linalg.norm(g)
+                    acc_list_epoch.append(acc_score)
+                    grad_list_epoch.append(grad_score)
+                    
                 if num_epochs % 1000 == 0:
                     print(f'{num_epochs}/{max_epochs} complete.')
+                
             else:
                 g = self.gradient(x, y)
 
