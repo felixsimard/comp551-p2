@@ -264,9 +264,11 @@ class LogisticRegression:
                 if num_epochs % itv == 0:
                     if smoothing:
                         acc_score = sum(acc_window)/len(acc_window)
-                        acc_window = []
                         grad_score = sum(grad_window)/len(grad_window)
+                        acc_window = []
+                        grad_window = []
                     else:
+                        val_yh = (self.predict(val_X) > 0.5).astype('int')
                         acc_score = accuracy_score(val_y, val_yh)
                         grad_score = np.linalg.norm(g)
                     acc_list_epoch.append(acc_score)
